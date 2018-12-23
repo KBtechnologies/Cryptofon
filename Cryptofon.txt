@@ -1,0 +1,145 @@
+Cryptofon.org
+Specification
+
+Version:	0.1 (pre - alpha)
+As of:		2018-12-23
+
+
+
+Abstract
+
+This Specification is designed to specify a manufacturer-independent standard for secure and encrypted communication.
+
+In detail, it is aimed to be an open-source alternative to propietary and restricted solutions such as the Secure Communications Interoperability Protocol [SCIP], NAH6 Secure Phone Protocol [NSPP] or the GSMK CryptoPhone.
+
+In difference to Voice-over-IP [VoIP] protocols like Cisco SCCP, SIP or ZRTP, the Cryptofon protocol is transparent and can be used on any type of network, from RS-485 - alike [transparent] direct connections to PTT radio, SATCOM or cellular networks. In theory, it can be used almost anywhere, through eventally necessary buffering and latencies may result in a dissatisfactroy user experience.
+
+It's security is hereby defined by using IND-CCA2 - proof cryptography and authentification, which must employ plausible deniability options in cases it is technically possible.
+
+The Cryptofon Standard may be updated subsequentially to improve the system in general.
+
+At all times, a minimum of one baseline profile consisting only of open-source codecs must be supported by all devices of a current version.
+Backwards-compactibility must be given at least 2 generations backwards. (i.e. a Device with Version 4.20 will support any device down to Version 2.0 & 2.x as counterpart.)
+
+
+
+
+
+Definitions
+
+A Cryptofon [CF] is a device that is made with the sole or main purpose of communication with voice, text and binary data according to this specification.
+
+The I/O Backplate [IOB] connects all modules and also contains the multiplexing & demultiplexing logic for the entire system.
+It's by design providing non-blocking, point-to-point connectivity between modules.
+
+User Data Time Slot [UDTS] is the smallest individually assignable bandwith for user applications (i.e. voice, data, or text). It carries 150 bit/s of data, which are multiplexed & demultiplexed into the Bitstream. Up to 10 UDTSes are available for assignment on the Cryptofon.
+UDTS bandwith is inteded to be used to negotiate and exchange keys before, at the beginning and during calls.
+
+A Cryptofon Gateway [CFG] is a device with the purpose of connecting one or multiple CFs with each other or other voice and text/data transmitting/recieving equipment and/or across technology standards (i.e. adapting a regular, analog landline phone to work as a Cryptofon over a wireless network as specified according to IEEE 802.11ac)
+CFGs may act transparently to the CFs, as all cryptofon connections are point-to-point.
+Conferencing (Multicast & Broadcast) is done by switching and mux-/demuxing UDTSes. Changes are transmitted using the Sync signal.
+
+Sync Signal [SYNC] is used to transmit data, status updates and (changes of-) the UDTS useage. 
+
+Cryptofon Bitstream [CFB] is the internal raw I/O format of Cryptofon connections. It is a 2400 bit/s stream, consisting of an FEC 3/4 for basic error correction (600 bit/s), sync signal (300 bit/s) and 10 UDTS (150 bit/s each - 1500 bit/s in total), which can be assigned to either transmit data, Updates for the Cryptofon, text and/or voice.
+
+Encryption Module [EM] is the main unit to decrypt CFBs. It's form factor is specified as PCMCIA Type 1. It utilizes crypto processing chipcards in ID-0 formfactor to generate Keys. It's role is similar to the KSV-21 card used in Secure Terminal Equipment. 
+Must-Support:
+	Stream Cipher
+		One Time Pad
+		AES-256 w/o key expansion
+		RSA-8kbit-OAEP
+	Key Exchange & Signature
+		manual key input
+		keyfile [i.e. for One Time Pad]
+		RSA-8kbit-OAEP session key
+		RSA-8kbit-OAEP peer key
+		RSA-256kbit-OAEP peer key
+
+Cryptofon Key Storage [CFKS] is the fully encrypted storage device for permanent, non-session keys that are used to verify transmitted Gateway Keys [GK], session keys [SK] and peering keys [PK].
+The CFKS may employ a public-private cryptosystem that enables peers to sign and encrypt PKs as well as SKs. For plausible deniability, GKs and PKs may not be utilized and the CFKS may be encrypted in a way that offers plausible deniability. It's role is similar to the KSD-64 "Crypto Ignition Key" in STU-III devices.
+The CFKS may be a microSHDC/microSDXC card.
+
+Gateway Keys [GK] may be used to update Peering Keys without directly connecting the peer, thus preventing any insecure first contact.
+This avoids the possibly insecure TOFU [Trust on First Use] Setup.
+A GK must provide a fully transparent trust chain from the peer to the CF in use. This way, a web of trust and verifyable sources of keys can be granted, as well as Man in the Middle [MitM] attacks that aim to spread false keys can be detected.
+Gateway Keys can be deactivated and deleted in case of need.
+
+Peering Keys [PKs] are keys intended to encrypt the Session Keys. They are optional and are intended to be updated after a fixed time frame (recommended maximum is 11 months) and/or after a certain number of SKs have been generated (recommended maximum is 128 SKs), but can be deactivated or skipped for plausible deniability.
+
+Network Module [NM] is the outbound interface designed to connect the CF to another CF or gateway.
+An NM may employ one or multiple standards of interconnect depending on the needs, and may include transparent network encryption as well as plausible deniability rerouting.
+The NM should fit the PCMCIA Type 3 form factor and utilize an ID-000 card to store network encryption keys if it employs transparent network encryption.
+It's intended to work as transparent as a Common Interface - Conditional Access Module.
+
+Cryptofon Vocoder Module [CVM] holds the entire voice encoding and decoding hardware.
+Form Factor of the CVM is PCMCIA Type 2. Connectors include a 2,5mm TRS and 3,5mm TRRS Headset connector as well as a 2-pin TRS radio PTT connector.
+Must Support:
+	Codec2 @ 1200bit/s
+Additional Narrowband Vocoders may be implemented into a module and may be used if explicitly supported by both ends.
+
+Forward Error Correction [FEC] with a 3/4 ratio is being applied on the encrypted bitstream to prevent random bitswaps.
+
+
+
+
+Schematic
+
+
+1200 bit/s Codec2 and 300 bit/s text/binary I/O (RS-485)
+1200 bit/s Codec2 and 300 bit/s Unicode Text (SMS)
+OR 1500 bit/s binary I/O
+OR 1500 bit/s Unicode Text (SMS)
+OR 1500 bit/s Key Exchange
+
+OR any mix of voice, text/binary and keys that does not exceed a total of 1500 bit/s and is split into UDTSes.
+
++
+
+300 bit/s SYNC
+
+================
+1800 bit/s encrypted I/O
+================
+
++ FEC 3/4 ( + 600 bit/s)
+
+================
+2400 bit/s external, encryped I/O with FEC 3/4
+================
+
+
+
+
+
+Encryption
+
+Baseline:
+PKX [Peer Key Exchange]:	RSA-OAEP-256kbit
+GKX [Gateway Key Exchange]:	RSA-OAEP-128kbit
+SKX [Session Key Exchange]:	RSA-OAEP-8kbit
+ENC [Encryption]:			AES-PSS-256bit
+					and/or 	RSA-OAEP-8kbit
+
+Optional Algorithms:
+OTP [keyfiles!]
+RSA
+Salsa20
+AES-PSS-128
+IDEA
+RC6
+McEliece
+Ring-LWE
+SIDH
+NTRUEncrypt
+RSA-PSS
+RSA-OAEP
+Blowfish
+Twofish
+MARS
+Serpent
+TEA
+XTEA
+Triple-DES
+
+Devices should drop support for insecure algorithms!
