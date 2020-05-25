@@ -1,8 +1,8 @@
 Cryptofon.org
 Specification
 
-Version:	0.1 (pre - alpha)
-As of:		2018-12-23
+Version:	0.1.1 (pre - alpha)
+As of:		2020-05-20
 
 
 
@@ -86,29 +86,61 @@ Forward Error Correction [FEC] with a 3/4 ratio is being applied on the encrypte
 Schematic
 
 
+"Full-Rate Mode"
+Full Rate Mode uses a total of 2400 bit/s gross bandwith [excl. protocol overhead] to transmit voice and/or data
+
 1200 bit/s Codec2 and 300 bit/s text/binary I/O (RS-485)
 1200 bit/s Codec2 and 300 bit/s Unicode Text (SMS)
 OR 1500 bit/s binary I/O
 OR 1500 bit/s Unicode Text (SMS)
 OR 1500 bit/s Key Exchange
-
-OR any mix of voice, text/binary and keys that does not exceed a total of 1500 bit/s and is split into UDTSes.
-
+OR any mix of voice, text/binary and keys that does not exceed a total of 1500 bit/s and is split into 10 UDTSes.
 +
-
 300 bit/s SYNC
-
 ================
 1800 bit/s encrypted I/O
 ================
-
 + FEC 3/4 ( + 600 bit/s)
-
 ================
 2400 bit/s external, encryped I/O with FEC 3/4
 ================
 
 
+"Half-Rate Mode"
+Half-Rate Mode uses a total of 1200 bit/s gross bandwith [excl. protocol overhead] to transmit voice and/or data
+
+450 bit/s Codec2 and 300 bit/s text/binary I/O (RS-485)
+450 bit/s Codec2 and 300 bit/s Unicode Text (SMS)
+OR 750 bit/s binary I/O
+OR 750 bit/s Unicode Text (SMS)
+OR 750 bit/s Key Exchange
+OR any mix of voice, text/binary and keys that does not exceed a total of 750 bit/s and is split into 5 UDTSes.
++
+150 bit/s SYNC
+================
+900 bit/s encrypted I/O
+================
++ FEC 3/4 ( + 300 bit/s)
+================
+1200 bit/s external, encryped I/O with FEC 3/4
+================
+
+
+"Quarter-Rate Mode"
+Quarter-Rate Mode uses a total of 600 bit/s gross bandith [excl. protocol overhead] to transmit voice or data
+450 bit/s Codec2
+OR 450 bit/s binary I/O
+OR 450 bit/s Unicode Text (SMS)
+OR 450 bit/s Key Exchange
+OR 450 bit/s SYNC
+OR any mix of voice, text/binary and keys that does not exceed a total of 450 bit/s and is split into 3 UDTSes.
+================
+450 bit/s encrypted I/O
+================
++ FEC 3/4 ( + 150 bit/s)
+================
+600 bit/s external, encryped I/O with FEC 3/4
+================
 
 
 
@@ -119,10 +151,10 @@ PKX [Peer Key Exchange]:	RSA-OAEP-256kbit
 GKX [Gateway Key Exchange]:	RSA-OAEP-128kbit
 SKX [Session Key Exchange]:	RSA-OAEP-8kbit
 ENC [Encryption]:			AES-PSS-256bit
-					and/or 	RSA-OAEP-8kbit
+					and/or 	RSA-OAEP-4kbit
+					and/or 	OTP [Keyfiles!]
 
 Optional Algorithms:
-OTP [keyfiles!]
 RSA
 Salsa20
 AES-PSS-128
@@ -142,4 +174,4 @@ TEA
 XTEA
 Triple-DES
 
-Devices should drop support for insecure algorithms!
+Devices should drop support for insecure algorithms and always negotiate the most secure algorithm supported by both ends!
